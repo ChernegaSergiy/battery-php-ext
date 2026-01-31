@@ -108,7 +108,7 @@ jobs:
       - name: Build extension
         shell: cmd
         run: |
-          phpize
+          call phpize
           cscript /nologo configure.js --enable-battery_info
           nmake
 
