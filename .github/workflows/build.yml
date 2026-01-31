@@ -95,7 +95,7 @@ jobs:
       - name: Set up Android NDK
         uses: nttld/setup-ndk@v1
         with:
-          ndk-version: '25.2.9519653'
+          ndk-version: r25c
 
       - name: Build native library (armeabi-v7a)
         working-directory: .
