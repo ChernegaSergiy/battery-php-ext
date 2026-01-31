@@ -86,13 +86,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Android SDK
-        uses: r0adkll/install-android-sdk@v1
+      - name: Set up JDK
+        uses: actions/setup-java@v4
         with:
-          packages: 'platform-tools,build-tools;34.0.0,platforms;android-34'
+          distribution: 'temurin'
+          java-version: '17'
 
-      - name: Install Android NDK
-        uses: r0adkll/install-ndk@v1
+      - name: Set up Android NDK
+        uses: actions/setup-ndk@v1
         with:
           ndk-version: '25.2.9519653'
 
