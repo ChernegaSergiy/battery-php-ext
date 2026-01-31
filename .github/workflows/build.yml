@@ -34,6 +34,10 @@ jobs:
           ./configure --enable-battery_info
           make -j$(nproc)
 
+      - name: Run tests
+        run: |
+          php -d extension=modules/battery_info.so tests/test_battery.php
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
