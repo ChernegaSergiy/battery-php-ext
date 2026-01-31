@@ -88,7 +88,7 @@ jobs:
       - name: Install dependencies
         shell: cmd
         run: |
-          choco install winflexbison re2c
+          choco install winflexbison3 re2c
           if exist C:\ProgramData\chocolatey\bin\win_bison.exe copy C:\ProgramData\chocolatey\bin\win_bison.exe C:\ProgramData\chocolatey\bin\bison.exe
 
       - name: Download PHP Dev Pack
