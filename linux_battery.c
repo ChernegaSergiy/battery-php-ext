@@ -32,6 +32,23 @@ static int read_status_file(const char *path)
     return -1;
 }
 
+static int is_battery_type(const char *base, const char *name)
+{
+    char path[PATH_MAX];
+    char buf[64] = {0};
+    snprintf(path, sizeof(path), "%s/%s/type", base, name);
+    FILE *f = fopen(path, "r");
+    if (!f) return 0;
+    if (fscanf(f, "%63s", buf) != 1) {
+        fclose(f);
+        return 0;
+    }
+    fclose(f);
+    /* Check if type is "Battery" */
+    if (strcasecmp(buf, "Battery") == 0) return 1;
+    return 0;
+}
+
 int linux_battery_level(void)
 {
     const char *base = "/sys/class/power_supply";
@@ -42,8 +59,10 @@ int linux_battery_level(void)
     int found = -1;
     while ((ent = readdir(d)) != NULL) {
         if (ent->d_name[0] == '.') continue;
-        /* look for common battery names */
-        if (strncasecmp(ent->d_name, "BAT", 3) != 0 && strcasestr(ent->d_name, "battery") == NULL) continue;
+        
+        /* Check type instead of name */
+        if (!is_battery_type(base, ent->d_name)) continue;
+
         snprintf(path, sizeof(path), "%s/%s/capacity", base, ent->d_name);
         found = read_int_file(path);
         if (found >= 0) break;
@@ -62,7 +81,10 @@ int linux_battery_is_charging(void)
     int found = -1;
     while ((ent = readdir(d)) != NULL) {
         if (ent->d_name[0] == '.') continue;
-        if (strncasecmp(ent->d_name, "BAT", 3) != 0 && strcasestr(ent->d_name, "battery") == NULL) continue;
+        
+        /* Check type instead of name */
+        if (!is_battery_type(base, ent->d_name)) continue;
+
         snprintf(path, sizeof(path), "%s/%s/status", base, ent->d_name);
         found = read_status_file(path);
         if (found != -1) break;
