@@ -86,14 +86,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Android SDK
-        uses: actions/setup-android@v3
-        with:
-          sdk-version: '34.0.0'
-
-      - name: Set up Android NDK
+      - name: Set up Android SDK & NDK
         uses: maxim-lobanov/setup-android@v1
         with:
+          sdk: '34.0.0'
           ndk: '25.2.9519653'
 
       - name: Build native library (armeabi-v7a)
