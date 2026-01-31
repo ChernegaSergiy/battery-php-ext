@@ -80,15 +80,16 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.1'
-          architecture: x64
-          ts: nts
-          extensions: zend-test
+          tools: phpize, php-config
           
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+
       - name: Build extension
         shell: cmd
         run: |
           phpize
-          configure --enable-battery_info
+          call configure --enable-battery_info
           nmake
 
       - name: Upload artifact
