@@ -75,28 +75,21 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+
+      - name: Build Extension
+        id: build
+        uses: php/php-windows-builder@v1
         with:
           php-version: '8.1'
-          tools: phpize, php-config
-          
-      - name: Setup MSVC
-        uses: ilammy/msvc-dev-cmd@v1
-
-      - name: Build extension
-        shell: cmd
-        run: |
-          phpize
-          call configure --enable-battery_info
-          nmake
+          ts: nts
+          arch: x64
+          args: --enable-battery_info
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: battery_info-windows
-          path: '**/php_battery_info.dll'
+          path: ${{ steps.build.outputs.dll }}
 
   build-android:
     name: Build Android (armeabi-v7a, API21)
