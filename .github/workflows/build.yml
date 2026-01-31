@@ -108,8 +108,10 @@ jobs:
       - name: Build extension
         shell: cmd
         run: |
+          dir
           phpize
-          call configure --enable-battery_info
+          dir
+          call configure.bat --enable-battery_info
           nmake
 
       - name: Upload artifact
