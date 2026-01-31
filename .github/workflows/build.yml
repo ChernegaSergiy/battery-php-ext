@@ -28,7 +28,7 @@ jobs:
           sudo apt-get install -y autoconf automake libtool pkg-config build-essential cmake
 
       - name: Prepare build (phpize)
-        working-directory: ./ext/battery_info
+        working-directory: .
         run: |
           phpize
           ./configure --enable-battery_info
@@ -38,7 +38,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: battery_info-${{ matrix.arch }}-linux
-          path: ./ext/battery_info/modules
+          path: ./modules
 
   build-macos:
     name: Build (macOS)
@@ -57,7 +57,7 @@ jobs:
           brew install autoconf automake libtool pkg-config
 
       - name: Build extension
-        working-directory: ./ext/battery_info
+        working-directory: .
         run: |
           export LDFLAGS="-framework IOKit -framework CoreFoundation"
           phpize
@@ -68,7 +68,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: battery_info-macos
-          path: ./ext/battery_info/modules
+          path: ./modules
 
   build-windows:
     name: Windows note
@@ -86,13 +86,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Android NDK
-        uses: r0adkll/install-ndk@v1
+      - name: Set up Android NDK
+        uses: maxim-lobanov/setup-android@v1
         with:
-          ndk-version: '25.2.9519653'
+          ndk: '25.2.9519653'
 
       - name: Build native library (armeabi-v7a)
-        working-directory: ./ext/battery_info
+        working-directory: .
         env:
           ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
         run: |
@@ -105,4 +105,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: battery_android_armeabi-v7a
-          path: ./ext/battery_info/android-build
+          path: ./android-build
