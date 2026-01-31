@@ -85,6 +85,10 @@ jobs:
       - name: Setup MSVC
         uses: ilammy/msvc-dev-cmd@v1
 
+      - name: Install dependencies
+        shell: cmd
+        run: choco install bison re2c
+
       - name: Download PHP Dev Pack
         shell: pwsh
         run: |
