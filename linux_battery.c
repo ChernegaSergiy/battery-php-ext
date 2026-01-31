@@ -1,4 +1,5 @@
 #define _GNU_SOURCE
+#if defined(__linux__) || defined(__ANDROID__)
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -69,3 +70,7 @@ int linux_battery_is_charging(void)
     closedir(d);
     return found;
 }
+#else
+int linux_battery_level(void) { return -1; }
+int linux_battery_is_charging(void) { return -1; }
+#endif
