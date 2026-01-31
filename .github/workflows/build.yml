@@ -116,4 +116,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: battery_android_armeabi-v7a
-          path: ./android-build
+          path: ./android-build/libbattery_android.so

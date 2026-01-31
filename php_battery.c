@@ -23,8 +23,17 @@ PHP_FUNCTION(battery_info)
 
 #if defined(__ANDROID__)
     platform = "android";
-    level = android_battery_level();
-    charging = android_battery_is_charging();
+    /* Try Linux sysfs first (for CLI/Termux) */
+    level = linux_battery_level();
+    if (level < 0) {
+        /* Fallback to JNI (for embedded inside Java App) */
+        level = android_battery_level();
+    }
+    
+    charging = linux_battery_is_charging();
+    if (charging < 0) {
+        charging = android_battery_is_charging();
+    }
 #elif defined(__linux__)
     platform = "linux";
     level = linux_battery_level();
