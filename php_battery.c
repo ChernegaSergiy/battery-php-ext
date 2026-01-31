@@ -78,4 +78,4 @@ zend_module_entry battery_module_entry = {
     STANDARD_MODULE_PROPERTIES
 };
 
-ZEND_GET_MODULE(battery_info)
+ZEND_GET_MODULE(battery)
