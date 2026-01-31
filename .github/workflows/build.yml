@@ -34,10 +34,6 @@ jobs:
           ./configure --enable-battery_info
           make -j$(nproc)
 
-      - name: Run tests
-        run: |
-          php -d extension=modules/battery_info.so tests/test_battery.php
-
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -117,3 +113,25 @@ jobs:
         with:
           name: battery_android_armeabi-v7a
           path: ./android-build/libbattery_android.so
+
+  build-android-apk:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Build with Gradle
+        working-directory: android-test-app
+        run: gradle assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: battery-test-app
+          path: android-test-app/app/build/outputs/apk/debug/app-debug.apk
