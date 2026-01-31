@@ -1,0 +1,109 @@
+name: Build battery_info
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-unix:
+    name: Build (Linux x64/arm64)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [x64, arm64]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v3
+        with:
+          php-version: '8.1'
+          architecture: ${{ matrix.arch }}
+
+      - name: Install build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y autoconf automake libtool pkg-config build-essential cmake
+
+      - name: Prepare build (phpize)
+        working-directory: ./ext/battery_info
+        run: |
+          phpize
+          ./configure --enable-battery_info
+          make -j$(nproc)
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: battery_info-${{ matrix.arch }}-linux
+          path: ./ext/battery_info/modules
+
+  build-macos:
+    name: Build (macOS)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v3
+        with:
+          php-version: '8.1'
+
+      - name: Install brew deps
+        run: |
+          brew update || true
+          brew install autoconf automake libtool pkg-config
+
+      - name: Build extension
+        working-directory: ./ext/battery_info
+        run: |
+          export LDFLAGS="-framework IOKit -framework CoreFoundation"
+          phpize
+          ./configure --enable-battery_info
+          make -j$(sysctl -n hw.ncpu)
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: battery_info-macos
+          path: ./ext/battery_info/modules
+
+  build-windows:
+    name: Windows note
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Windows build guidance
+        run: |
+          echo "Windows builds of PHP extensions require the PHP SDK and MSVC toolchain."
+          echo "See README and official PHP Windows build docs: https://wiki.php.net/internals/windows/stepbystepbuild"
+
+  build-android:
+    name: Build Android (armeabi-v7a, API21)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Android NDK
+        id: setup-ndk
+        uses: android-actions/setup-ndk@v2
+        with:
+          ndk-version: '25.2.9519653'
+
+      - name: Build native library (armeabi-v7a)
+        working-directory: ./ext/battery_info
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+        run: |
+          mkdir -p android-build && cd android-build
+          cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake \
+            -DANDROID_ABI=armeabi-v7a -DANDROID_NATIVE_API_LEVEL=21 ..
+          cmake --build . --config Release
+
+      - name: Upload android artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: battery_android_armeabi-v7a
+          path: ./ext/battery_info/android-build
