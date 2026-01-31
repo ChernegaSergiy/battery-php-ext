@@ -1,0 +1,9 @@
+// $Id$
+// vim:ft=javascript
+
+ARG_ENABLE("battery_info", "enable battery_info support", "no");
+
+if (PHP_BATTERY_INFO != "no") {
+    EXTENSION("battery_info", "php_battery.c windows_battery.c linux_battery.c mac_battery.c android_battery.c");
+    AC_DEFINE("HAVE_BATTERY_INFO", 1, "Battery Info support");
+}
