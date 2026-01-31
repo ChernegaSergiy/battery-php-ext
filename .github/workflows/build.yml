@@ -93,7 +93,7 @@ jobs:
           java-version: '17'
 
       - name: Set up Android NDK
-        uses: actions/setup-ndk@v1
+        uses: nttld/setup-ndk@v1
         with:
           ndk-version: '25.2.9519653'
 
