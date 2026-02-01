@@ -1,5 +1,8 @@
 # battery_info PHP extension
 
+[![Latest Stable Version](https://img.shields.io/packagist/v/chernegasergiy/battery-info.svg?label=Packagist&logo=packagist)](https://packagist.org/packages/chernegasergiy/battery-info)
+[![Total Downloads](https://img.shields.io/packagist/dt/chernegasergiy/battery-info.svg?label=Downloads&logo=packagist)](https://packagist.org/packages/chernegasergiy/battery-info)
+[![License](https://img.shields.io/packagist/l/chernegasergiy/battery-info.svg?label=Licence&logo=open-source-initiative)](https://packagist.org/packages/chernegasergiy/battery-info)
 [![Build Linux](https://github.com/ChernegaSergiy/battery-php-ext/actions/workflows/build-linux.yml/badge.svg)](https://github.com/ChernegaSergiy/battery-php-ext/actions/workflows/build-linux.yml)
 [![Build macOS](https://github.com/ChernegaSergiy/battery-php-ext/actions/workflows/build-macos.yml/badge.svg)](https://github.com/ChernegaSergiy/battery-php-ext/actions/workflows/build-macos.yml)
 [![Build Windows](https://github.com/ChernegaSergiy/battery-php-ext/actions/workflows/build-windows.yml/badge.svg)](https://github.com/ChernegaSergiy/battery-php-ext/actions/workflows/build-windows.yml)
