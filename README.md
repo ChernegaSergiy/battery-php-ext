@@ -12,6 +12,35 @@ This extension exposes a single function: `battery_info()` which returns an arra
 - `status` (string|null) — "charging"/"discharging"/null
 - `platform` (string) — platform name
 
+## Usage Example
+
+```php
+<?php
+if (!function_exists('battery_info')) {
+    die("Extension not loaded");
+}
+
+$info = battery_info();
+
+if ($info['level'] !== null) {
+    echo "Battery Level: " . $info['level'] . "%\n";
+    echo "Status: " . ($info['charging'] ? "Charging ⚡" : "Discharging") . "\n";
+    echo "Platform: " . $info['platform'] . "\n";
+} else {
+    echo "Battery info not available.\n";
+}
+```
+
+## Installation
+
+1. **Build or Download** the extension binary for your OS.
+2. **Locate your extensions directory**: `php -i | grep extension_dir`.
+3. **Copy the file**:
+   - Linux/macOS/Android: `battery_info.so`
+   - Windows: `php_battery_info.dll`
+4. **Enable in `php.ini`**:
+   - Add `extension=battery_info` (or `extension=php_battery_info.dll` on Windows).
+
 ## Build (typical Unix/macOS)
 
 ```sh
