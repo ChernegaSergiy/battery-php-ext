@@ -22,3 +22,7 @@ Notes:
 - On Linux the extension reads `/sys/class/power_supply/*/capacity` and `status`.
 - On macOS the extension uses IOKit (build with Xcode tools available).
 - On Windows the extension uses `GetSystemPowerStatus`.
+
+## License
+
+This library is licensed under the CSSM Unlimited License v2.0 (CSSM-ULv2). See the [LICENSE](LICENSE) file for details.
