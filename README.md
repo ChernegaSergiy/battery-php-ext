@@ -6,14 +6,18 @@
 [![Build Linux](https://github.com/ChernegaSergiy/battery-php-ext/actions/workflows/build-linux.yml/badge.svg)](https://github.com/ChernegaSergiy/battery-php-ext/actions/workflows/build-linux.yml)
 [![Build macOS](https://github.com/ChernegaSergiy/battery-php-ext/actions/workflows/build-macos.yml/badge.svg)](https://github.com/ChernegaSergiy/battery-php-ext/actions/workflows/build-macos.yml)
 [![Build Windows](https://github.com/ChernegaSergiy/battery-php-ext/actions/workflows/build-windows.yml/badge.svg)](https://github.com/ChernegaSergiy/battery-php-ext/actions/workflows/build-windows.yml)
-[![Build Android](https://github.com/ChernegaSergiy/battery-php-ext/actions/workflows/build-android.yml/badge.svg)](https://github.com/ChernegaSergiy/battery-php-ext/actions/workflows/build-android.yml)
 
 This extension exposes a single function: `battery_info()` which returns an array with keys:
 
-- `level` (int|null) — 0..100 or null if unknown
-- `charging` (bool|null) — true/false or null
-- `status` (string|null) — "charging"/"discharging"/null
-- `platform` (string) — platform name
+- `batteries` (array) — array of all detected batteries, each containing:
+  - `name` (string) — battery identifier (e.g., "BAT0", "BAT1")
+  - `level` (int|null) — 0..100 or null if unknown
+  - `charging` (bool|null) — true/false or null
+  - `status` (string|null) — "charging"/"discharging"/"full"/"not charging"/null
+- `level` (int|null) — primary battery level (0..100 or null)
+- `charging` (bool|null) — primary battery charging state
+- `status` (string|null) — primary battery status
+- `platform` (string) — platform name ("linux", "macos", "windows", "android")
 
 ## Installation
 
@@ -54,12 +58,22 @@ if (!function_exists('battery_info')) {
 
 $info = battery_info();
 
-if ($info['level'] !== null) {
-    echo "Battery Level: " . $info['level'] . "%\n";
-    echo "Status: " . ($info['charging'] ? "Charging ⚡" : "Discharging") . "\n";
-    echo "Platform: " . $info['platform'] . "\n";
+echo "Platform: " . $info['platform'] . "\n";
+
+// Check all batteries
+if (!empty($info['batteries'])) {
+    foreach ($info['batteries'] as $battery) {
+        echo "Battery: " . $battery['name'] . "\n";
+        echo "  Level: " . ($battery['level'] ?? 'unknown') . "%\n";
+        echo "  Status: " . ($battery['status'] ?? 'unknown') . "\n";
+    }
 } else {
-    echo "Battery info not available.\n";
+    echo "No batteries detected.\n";
+}
+
+// Or use primary battery info directly
+if ($info['level'] !== null) {
+    echo "\nPrimary battery: " . $info['level'] . "% (" . $info['status'] . ")\n";
 }
 ```
 
