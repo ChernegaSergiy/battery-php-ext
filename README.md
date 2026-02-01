@@ -12,7 +12,7 @@ This extension exposes a single function: `battery_info()` which returns an arra
 - `status` (string|null) — "charging"/"discharging"/null
 - `platform` (string) — platform name
 
-Build (typical Unix/macOS):
+## Build (typical Unix/macOS)
 
 ```sh
 phpize
@@ -21,12 +21,12 @@ make
 sudo make install
 ```
 
-Notes:
+## Notes
 
-- Android requires a small Java helper class and JNI glue — see `android_battery.c` comments.
-- On Linux the extension reads `/sys/class/power_supply/*/capacity` and `status`.
-- On macOS the extension uses IOKit (build with Xcode tools available).
-- On Windows the extension uses `GetSystemPowerStatus`.
+- **Android** requires a small Java helper class and JNI glue — see `android_battery.c` comments.
+- On **Linux** the extension reads `/sys/class/power_supply/*/capacity` and `status`.
+- On **macOS** the extension uses IOKit (build with Xcode tools available).
+- On **Windows** the extension uses `GetSystemPowerStatus`.
 
 ## Contributing
 
