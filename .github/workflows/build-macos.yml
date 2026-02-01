@@ -1,0 +1,38 @@
+name: Build macOS
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-macos:
+    name: Build (macOS)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+
+      - name: Install brew deps
+        run: |
+          brew update || true
+          brew install autoconf automake libtool pkg-config
+
+      - name: Build extension
+        working-directory: .
+        run: |
+          export LDFLAGS="-framework IOKit -framework CoreFoundation"
+          phpize
+          ./configure --enable-battery_info
+          make -j$(sysctl -n hw.ncpu)
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: battery_info-macos
+          path: ./modules

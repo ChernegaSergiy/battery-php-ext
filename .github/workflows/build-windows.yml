@@ -1,0 +1,62 @@
+name: Build Windows
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-windows:
+    name: Build (Windows x64)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        id: setup-php
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Install dependencies
+        shell: cmd
+        run: |
+          choco install winflexbison3 re2c
+          if exist C:\ProgramData\chocolatey\bin\win_bison.exe copy C:\ProgramData\chocolatey\bin\win_bison.exe C:\ProgramData\chocolatey\bin\bison.exe
+
+      - name: Download PHP Dev Pack
+        shell: pwsh
+        run: |
+          $phpVersion = php -r "echo PHP_VERSION;"
+          Write-Host "PHP Version: $phpVersion"
+          
+          $url = "https://windows.php.net/downloads/releases/php-devel-pack-$phpVersion-nts-Win32-vs16-x64.zip"
+          
+          Write-Host "Downloading Dev Pack from: $url"
+          Invoke-WebRequest -Uri $url -OutFile php-devel.zip
+          
+          Expand-Archive php-devel.zip -DestinationPath .
+          
+          $devPackDir = Get-ChildItem -Directory | Where-Object { $_.Name -like "php-*-devel-*" } | Select-Object -First 1
+          $devPackPath = $devPackDir.FullName
+          
+          Write-Host "Dev Pack extracted to: $devPackPath"
+          
+          echo "$devPackPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Build extension
+        shell: cmd
+        run: |
+          call phpize
+          cscript /nologo configure.js --enable-battery_info
+          nmake
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: battery_info-windows
+          path: '**/php_battery_info.dll'

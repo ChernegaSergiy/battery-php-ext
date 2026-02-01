@@ -1,0 +1,41 @@
+name: Build Linux
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-unix:
+    name: Build (Linux x64/arm64)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [x64, arm64]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          architecture: ${{ matrix.arch }}
+
+      - name: Install build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y autoconf automake libtool pkg-config build-essential cmake
+
+      - name: Prepare build (phpize)
+        working-directory: .
+        run: |
+          phpize
+          ./configure --enable-battery_info
+          make -j$(nproc)
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: battery_info-${{ matrix.arch }}-linux
+          path: ./modules
