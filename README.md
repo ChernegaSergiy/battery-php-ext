@@ -33,6 +33,16 @@ if ($info['level'] !== null) {
 
 ## Installation
 
+### Install with PIE (Recommended)
+
+The easiest way to install the extension is using **PIE (PHP Installer for Extensions)**:
+
+```sh
+pie install chernegasergiy/battery-info
+```
+
+### Manual Installation
+
 1. **Build or Download** the extension binary for your OS.
 2. **Locate your extensions directory**: `php -i | grep extension_dir`.
 3. **Copy the file**:
