@@ -47,7 +47,7 @@ jobs:
         with:
           name: ${EXT_NAME}-x86_64-linux-php${{ matrix.php }}
           path: modules/
-  
+
 
   build-linux:
     name: Build (Linux ${{ matrix.label }}, PHP ${{ matrix.php }})
@@ -62,6 +62,7 @@ jobs:
             arch: aarch64
             runner: ubuntu-24.04-arm
             qemu: false
+            distro: ''
 
           - label: armhf
             arch: armv7
@@ -72,7 +73,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Native ARM64
       - name: Build natively (ARM64)
         if: matrix.qemu == false
         run: |
@@ -91,7 +91,6 @@ jobs:
           php -d extension=modules/${EXT_NAME}.so -m | grep ${EXT_NAME} || true
           php -d extension=modules/${EXT_NAME}.so example.php || true
 
-      # QEMU (armhf)
       - name: Build with QEMU (ARMv7 / armhf)
         if: matrix.qemu == true
         uses: uraimo/run-on-arch-action@v2
@@ -101,7 +100,7 @@ jobs:
           githubToken: ${{ github.token }}
 
           env: |
-            EXT_NAME: battery_info
+            EXT_NAME=${{ env.EXT_NAME }}
 
           install: |
             apt-get update -y
