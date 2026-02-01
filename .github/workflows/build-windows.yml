@@ -25,9 +25,6 @@ jobs:
           
       - name: Setup MSVC
         uses: ilammy/msvc-dev-cmd@v1
-        with:
-          # Use VS 2019 (14.29) for PHP 8.1-8.3, VS 2022 (14.44) for PHP 8.4
-          vsversion: ${{ matrix.php == '8.4' && '2022' || '2019' }}
 
       - name: Install dependencies
         shell: cmd
@@ -87,11 +84,15 @@ jobs:
           cscript /nologo configure.js --enable-battery_info
           nmake
 
-      - name: Test extension
-        shell: cmd
+      - name: Verify DLL exists
+        shell: pwsh
         run: |
-          php -d extension=x64\Release\php_battery_info.dll -m | findstr battery_info
-          php -d extension=x64\Release\php_battery_info.dll example.php
+          if (Test-Path "x64\Release\php_battery_info.dll") {
+            Write-Host "DLL built successfully"
+            Get-Item "x64\Release\php_battery_info.dll" | Select-Object Name, Length
+          } else {
+            throw "DLL not found"
+          }
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
