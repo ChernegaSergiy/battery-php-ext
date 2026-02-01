@@ -37,10 +37,29 @@ jobs:
           $phpVersion = php -r "echo PHP_VERSION;"
           Write-Host "PHP Version: $phpVersion"
           
-          $url = "https://windows.php.net/downloads/releases/php-devel-pack-$phpVersion-nts-Win32-vs16-x64.zip"
+          # Try NTS first, then TS if NTS fails
+          $urls = @(
+            "https://windows.php.net/downloads/releases/php-devel-pack-$phpVersion-nts-Win32-vs16-x64.zip",
+            "https://windows.php.net/downloads/releases/php-devel-pack-$phpVersion-Win32-vs16-x64.zip",
+            "https://windows.php.net/downloads/releases/php-devel-pack-$phpVersion-nts-Win32-VS16-x64.zip"
+          )
           
-          Write-Host "Downloading Dev Pack from: $url"
-          Invoke-WebRequest -Uri $url -OutFile php-devel.zip
+          $downloaded = $false
+          foreach ($url in $urls) {
+            Write-Host "Trying: $url"
+            try {
+              Invoke-WebRequest -Uri $url -OutFile php-devel.zip -ErrorAction Stop
+              $downloaded = $true
+              Write-Host "Successfully downloaded from: $url"
+              break
+            } catch {
+              Write-Host "Failed: $_"
+            }
+          }
+          
+          if (-not $downloaded) {
+            throw "Could not download PHP Dev Pack for version $phpVersion"
+          }
           
           Expand-Archive php-devel.zip -DestinationPath .
           
