@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
-/* Ці функції реалізовані в android_battery.c */
+/* These functions are implemented in android_battery.c */
 int android_battery_level(void);
 int android_battery_is_charging(void);
 
