@@ -1,5 +1,10 @@
 # battery_info PHP extension
 
+[![Build Linux](https://github.com/ChernegaSergiy/battery-php-ext/actions/workflows/build-linux.yml/badge.svg)](https://github.com/ChernegaSergiy/battery-php-ext/actions/workflows/build-linux.yml)
+[![Build macOS](https://github.com/ChernegaSergiy/battery-php-ext/actions/workflows/build-macos.yml/badge.svg)](https://github.com/ChernegaSergiy/battery-php-ext/actions/workflows/build-macos.yml)
+[![Build Windows](https://github.com/ChernegaSergiy/battery-php-ext/actions/workflows/build-windows.yml/badge.svg)](https://github.com/ChernegaSergiy/battery-php-ext/actions/workflows/build-windows.yml)
+[![Build Android](https://github.com/ChernegaSergiy/battery-php-ext/actions/workflows/build-android.yml/badge.svg)](https://github.com/ChernegaSergiy/battery-php-ext/actions/workflows/build-android.yml)
+
 This extension exposes a single function: `battery_info()` which returns an array with keys:
 
 - `level` (int|null) — 0..100 or null if unknown
