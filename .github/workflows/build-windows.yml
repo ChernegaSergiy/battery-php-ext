@@ -8,8 +8,11 @@ on:
 
 jobs:
   build-windows:
-    name: Build (Windows x64)
+    name: Build (Windows x64 PHP ${{ matrix.php }})
     runs-on: windows-latest
+    strategy:
+      matrix:
+        php: ['8.1', '8.2', '8.3', '8.4']
     steps:
       - uses: actions/checkout@v4
 
@@ -17,7 +20,7 @@ jobs:
         id: setup-php
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.1'
+          php-version: ${{ matrix.php }}
           
       - name: Setup MSVC
         uses: ilammy/msvc-dev-cmd@v1
@@ -55,8 +58,14 @@ jobs:
           cscript /nologo configure.js --enable-battery_info
           nmake
 
+      - name: Test extension
+        shell: cmd
+        run: |
+          php -d extension=x64\Release\php_battery_info.dll -m | findstr battery_info
+          php -d extension=x64\Release\php_battery_info.dll example.php
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: battery_info-windows
-          path: '**/php_battery_info.dll'
+          name: battery_info-windows-php${{ matrix.php }}
+          path: 'x64/Release/php_battery_info.dll'

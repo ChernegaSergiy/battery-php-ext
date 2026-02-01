@@ -8,15 +8,18 @@ on:
 
 jobs:
   build-macos:
-    name: Build (macOS)
+    name: Build (macOS PHP ${{ matrix.php }})
     runs-on: macos-latest
+    strategy:
+      matrix:
+        php: ['8.1', '8.2', '8.3', '8.4']
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.1'
+          php-version: ${{ matrix.php }}
 
       - name: Install brew deps
         run: |
@@ -24,15 +27,19 @@ jobs:
           brew install autoconf automake libtool pkg-config
 
       - name: Build extension
-        working-directory: .
         run: |
           export LDFLAGS="-framework IOKit -framework CoreFoundation"
           phpize
           ./configure --enable-battery_info
           make -j$(sysctl -n hw.ncpu)
 
+      - name: Test extension
+        run: |
+          php -d extension=modules/battery_info.so -m | grep battery_info
+          php -d extension=modules/battery_info.so example.php
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: battery_info-macos
+          name: battery_info-macos-php${{ matrix.php }}
           path: ./modules
