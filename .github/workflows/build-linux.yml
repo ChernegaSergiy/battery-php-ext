@@ -45,7 +45,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${EXT_NAME}-x86_64-linux-php${{ matrix.php }}
+          name: ${{ env.EXT_NAME }}-x86_64-linux-php${{ matrix.php }}
           path: modules/
 
 
@@ -125,5 +125,5 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${EXT_NAME}-${{ matrix.label }}-linux-php${{ matrix.php }}
+          name: ${{ env.EXT_NAME }}-${{ matrix.label }}-linux-php${{ matrix.php }}
           path: ${{ matrix.qemu && 'artifacts/modules' || 'modules' }}
