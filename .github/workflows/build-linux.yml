@@ -93,6 +93,9 @@ jobs:
           
           install: |
             apt-get update -q -y
+            apt-get install -q -y software-properties-common
+            add-apt-repository -y ppa:ondrej/php
+            apt-get update -q -y
             apt-get install -q -y php${{ matrix.php }} php${{ matrix.php }}-dev php${{ matrix.php }}-cli \
               autoconf automake libtool pkg-config build-essential file
           
