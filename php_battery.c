@@ -1,90 +1,78 @@
-#include <php.h>
+/**
+ * php_battery.c - Main PHP extension entry point for battery_info
+ */
 
-/* Platform-specific declarations */
-int linux_battery_level(void);
-int linux_battery_is_charging(void);
+#include "include/battery_common.h"
 
-int mac_battery_level(void);
-int mac_battery_is_charging(void);
-
-int windows_battery_level(void);
-int windows_battery_is_charging(void);
-
-int android_battery_level(void);
-int android_battery_is_charging(void);
-
+/**
+ * battery_info() - Returns battery information for the current platform
+ *
+ * @return array Battery information with keys: level, charging, status, platform, batteries
+ */
 PHP_FUNCTION(battery_info)
 {
+    const char *platform = BATTERY_PLATFORM_UNKNOWN;
+
     array_init(return_value);
 
-    int level = -1;
-    int charging = -1;
-    const char *platform = "unknown";
-
 #if defined(__ANDROID__)
-    platform = "android";
-    /* Try Linux sysfs first (for CLI/Termux) */
-    level = linux_battery_level();
-    if (level < 0) {
-        /* Fallback to JNI (for embedded inside Java App) */
-        level = android_battery_level();
+    platform = BATTERY_PLATFORM_ANDROID;
+    /* Try sysfs first (works on some Android devices) */
+    linux_battery_get_details(return_value);
+
+    /* If sysfs didn't find battery info, try JNI */
+    zval *level_val = zend_hash_str_find(Z_ARRVAL_P(return_value),
+                                          BATTERY_KEY_LEVEL,
+                                          sizeof(BATTERY_KEY_LEVEL) - 1);
+    if (level_val && Z_TYPE_P(level_val) == IS_NULL) {
+        zval_ptr_dtor(return_value);
+        array_init(return_value);
+        android_battery_get_details(return_value);
     }
-    
-    charging = linux_battery_is_charging();
-    if (charging < 0) {
-        charging = android_battery_is_charging();
-    }
+
 #elif defined(__linux__)
-    platform = "linux";
-    level = linux_battery_level();
-    charging = linux_battery_is_charging();
+    platform = BATTERY_PLATFORM_LINUX;
+    linux_battery_get_details(return_value);
+
 #elif defined(__APPLE__)
-    platform = "macos";
-    level = mac_battery_level();
-    charging = mac_battery_is_charging();
+    platform = BATTERY_PLATFORM_MACOS;
+    mac_battery_get_details(return_value);
+
 #elif defined(_WIN32)
-    platform = "windows";
-    level = windows_battery_level();
-    charging = windows_battery_is_charging();
+    platform = BATTERY_PLATFORM_WINDOWS;
+    windows_battery_get_details(return_value);
+
+#else
+    BATTERY_INIT_EMPTY(return_value);
 #endif
 
-    if (level >= 0) {
-        add_assoc_long(return_value, "level", (zend_long)level);
-    } else {
-        add_assoc_null(return_value, "level");
-    }
-
-    if (charging == 0 || charging == 1) {
-        add_assoc_bool(return_value, "charging", charging);
-        add_assoc_string(return_value, "status", charging ? "charging" : "discharging");
-    } else {
-        add_assoc_null(return_value, "charging");
-        add_assoc_null(return_value, "status");
-    }
-
-    add_assoc_string(return_value, "platform", (char*)platform);
+    add_assoc_string(return_value, BATTERY_KEY_PLATFORM, (char *)platform);
 }
 
-/* extension entry */
+/* Argument info for battery_info() */
 ZEND_BEGIN_ARG_INFO(arginfo_battery_info, 0)
 ZEND_END_ARG_INFO()
 
+/* Function entry table */
 static const zend_function_entry battery_functions[] = {
     ZEND_FE(battery_info, arginfo_battery_info)
     ZEND_FE_END
 };
 
+/* Module entry */
 zend_module_entry battery_module_entry = {
     STANDARD_MODULE_HEADER,
-    "battery_info",
+    BATTERY_INFO_EXTNAME,
     battery_functions,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    "0.1",
+    NULL,  /* MINIT */
+    NULL,  /* MSHUTDOWN */
+    NULL,  /* RINIT */
+    NULL,  /* RSHUTDOWN */
+    NULL,  /* MINFO */
+    BATTERY_INFO_VERSION,
     STANDARD_MODULE_PROPERTIES
 };
 
+#ifdef COMPILE_DL_BATTERY_INFO
 ZEND_GET_MODULE(battery)
+#endif
