@@ -15,25 +15,6 @@ This extension exposes a single function: `battery_info()` which returns an arra
 - `status` (string|null) — "charging"/"discharging"/null
 - `platform` (string) — platform name
 
-## Usage Example
-
-```php
-<?php
-if (!function_exists('battery_info')) {
-    die("Extension not loaded");
-}
-
-$info = battery_info();
-
-if ($info['level'] !== null) {
-    echo "Battery Level: " . $info['level'] . "%\n";
-    echo "Status: " . ($info['charging'] ? "Charging ⚡" : "Discharging") . "\n";
-    echo "Platform: " . $info['platform'] . "\n";
-} else {
-    echo "Battery info not available.\n";
-}
-```
-
 ## Installation
 
 ### Install with PIE (Recommended)
@@ -61,6 +42,25 @@ phpize
 ./configure --enable-battery_info
 make
 sudo make install
+```
+
+## Usage Example
+
+```php
+<?php
+if (!function_exists('battery_info')) {
+    die("Extension not loaded");
+}
+
+$info = battery_info();
+
+if ($info['level'] !== null) {
+    echo "Battery Level: " . $info['level'] . "%\n";
+    echo "Status: " . ($info['charging'] ? "Charging ⚡" : "Discharging") . "\n";
+    echo "Platform: " . $info['platform'] . "\n";
+} else {
+    echo "Battery info not available.\n";
+}
 ```
 
 ## Notes
