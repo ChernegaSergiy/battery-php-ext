@@ -99,30 +99,30 @@ jobs:
           distro: ${{ matrix.distro }}
           githubToken: ${{ github.token }}
 
-          env: |
-            EXT_NAME=${{ env.EXT_NAME }}
+        env:
+          EXT_NAME: ${{ env.EXT_NAME }}
 
-          install: |
-            apt-get update -y
-            apt-get install -y software-properties-common
-            add-apt-repository -y ppa:ondrej/php
-            apt-get update -y
-            apt-get install -y \
-              php${{ matrix.php }} \
-              php${{ matrix.php }}-dev \
-              php${{ matrix.php }}-cli \
-              autoconf automake libtool pkg-config build-essential file
+        install: |
+          apt-get update -y
+          apt-get install -y software-properties-common
+          add-apt-repository -y ppa:ondrej/php
+          apt-get update -y
+          apt-get install -y \
+            php${{ matrix.php }} \
+            php${{ matrix.php }}-dev \
+            php${{ matrix.php }}-cli \
+            autoconf automake libtool pkg-config build-essential file
 
-          run: |
-            phpize
-            ./configure --enable-${EXT_NAME}
-            make -j$(nproc)
+        run: |
+          phpize
+          ./configure --enable-${EXT_NAME}
+          make -j$(nproc)
 
-            php -d extension=modules/${EXT_NAME}.so -m | grep ${EXT_NAME} || true
-            php -d extension=modules/${EXT_NAME}.so example.php || true
+          php -d extension=modules/${EXT_NAME}.so -m | grep ${EXT_NAME} || true
+          php -d extension=modules/${EXT_NAME}.so example.php || true
 
-            mkdir -p artifacts
-            cp -r modules artifacts/
+          mkdir -p artifacts
+          cp -r modules artifacts/
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
