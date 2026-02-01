@@ -47,6 +47,7 @@ jobs:
     name: Build (Linux ${{ matrix.arch }})
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         include:
           - arch: aarch64
@@ -78,12 +79,6 @@ jobs:
             php: '8.1'
           - arch: armv6
             distro: bullseye
-            php: '8.2'
-          - arch: riscv64
-            distro: ubuntu22.04
-            php: '8.2'
-          - arch: ppc64le
-            distro: ubuntu22.04
             php: '8.2'
 
     steps:
