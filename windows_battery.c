@@ -1,29 +1,81 @@
+/**
+ * windows_battery.c - Windows battery information implementation
+ *
+ * Uses GetSystemPowerStatus API
+ */
+
+#include "include/battery_common.h"
+
 #if defined(_WIN32)
+
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#endif
 
-int windows_battery_level(void)
+void windows_battery_get_details(zval *return_value)
 {
-#if defined(_WIN32)
+    zval batteries;
+    array_init(&batteries);
+
     SYSTEM_POWER_STATUS sps;
-    if (!GetSystemPowerStatus(&sps)) return -1;
-    if (sps.BatteryLifePercent == 255) return -1;
-    return (int)sps.BatteryLifePercent;
-#else
-    (void)0;
-    return -1;
-#endif
+    if (GetSystemPowerStatus(&sps)) {
+        zval bat;
+        array_init(&bat);
+
+        add_assoc_string(&bat, BATTERY_KEY_NAME, "System Battery");
+
+        /* Capacity level */
+        int has_level = (sps.BatteryLifePercent != 255);
+        if (has_level) {
+            add_assoc_long(&bat, BATTERY_KEY_LEVEL, (zend_long)sps.BatteryLifePercent);
+        } else {
+            add_assoc_null(&bat, BATTERY_KEY_LEVEL);
+        }
+
+        /* Charging status (ACLineStatus: 0=Offline, 1=Online, 255=Unknown) */
+        int has_status = (sps.ACLineStatus != 255);
+        if (has_status) {
+            int charging = (sps.ACLineStatus == 1) ? 1 : 0;
+            add_assoc_bool(&bat, BATTERY_KEY_CHARGING, charging);
+            add_assoc_string(&bat, BATTERY_KEY_STATUS,
+                charging ? BATTERY_STATUS_CHARGING : BATTERY_STATUS_DISCHARGING);
+        } else {
+            add_assoc_null(&bat, BATTERY_KEY_CHARGING);
+            add_assoc_null(&bat, BATTERY_KEY_STATUS);
+        }
+
+        add_next_index_zval(&batteries, &bat);
+
+        /* Add batteries array first (consistent with other platforms) */
+        add_assoc_zval(return_value, BATTERY_KEY_BATTERIES, &batteries);
+
+        /* Add aggregated values */
+        if (has_level) {
+            add_assoc_long(return_value, BATTERY_KEY_LEVEL, (zend_long)sps.BatteryLifePercent);
+        } else {
+            add_assoc_null(return_value, BATTERY_KEY_LEVEL);
+        }
+
+        if (has_status) {
+            int charging = (sps.ACLineStatus == 1) ? 1 : 0;
+            add_assoc_bool(return_value, BATTERY_KEY_CHARGING, charging);
+            add_assoc_string(return_value, BATTERY_KEY_STATUS,
+                charging ? BATTERY_STATUS_CHARGING : BATTERY_STATUS_DISCHARGING);
+        } else {
+            add_assoc_null(return_value, BATTERY_KEY_CHARGING);
+            add_assoc_null(return_value, BATTERY_KEY_STATUS);
+        }
+    } else {
+        add_assoc_zval(return_value, BATTERY_KEY_BATTERIES, &batteries);
+        BATTERY_ADD_NULL_INFO(return_value);
+    }
 }
 
-int windows_battery_is_charging(void)
-{
-#if defined(_WIN32)
-    SYSTEM_POWER_STATUS sps;
-    if (!GetSystemPowerStatus(&sps)) return -1;
-    return sps.ACLineStatus == 1 ? 1 : 0;
 #else
-    (void)0;
-    return -1;
-#endif
+
+void windows_battery_get_details(zval *return_value)
+{
+    BATTERY_INIT_EMPTY(return_value);
 }
+
+#endif
+
