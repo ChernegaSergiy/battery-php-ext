@@ -1,0 +1,21 @@
+{
+    "name": "chernegasergiy/battery-info",
+    "type": "php-ext",
+    "description": "Cross-platform PHP extension for retrieving battery level and charging status (Linux, macOS, Windows, Android).",
+    "keywords": ["battery", "info", "status", "extension", "android", "sysfs", "jni"],
+    "license": "LicenseRef-CSSM-Unlimited-2.0",
+    "authors": [
+        {
+            "name": "Serhii Cherneha",
+            "email": "chernegasergiy3@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=8.0"
+    },
+    "extra": {
+        "pie": {
+            "extension-name": "battery_info"
+        }
+    }
+}
