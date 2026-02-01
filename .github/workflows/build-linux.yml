@@ -99,7 +99,7 @@ jobs:
           distro: ${{ matrix.distro }}
           githubToken: ${{ github.token }}
           env: |
-            EXT_NAME=${{ env.EXT_NAME }}
+            EXT_NAME: ${{ env.EXT_NAME }}
           install: |
             apt-get update -y
             apt-get install -y software-properties-common
