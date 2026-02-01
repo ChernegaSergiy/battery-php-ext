@@ -6,14 +6,18 @@ on:
   pull_request:
     branches: [ main ]
 
+env:
+  EXT_NAME: battery_info
+
 jobs:
   build-x86_64:
-    name: Build (Linux x86_64)
+    name: Build (Linux x86_64, PHP ${{ matrix.php }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         php: ['8.1', '8.2', '8.3', '8.4']
+
     steps:
       - uses: actions/checkout@v4
 
@@ -22,109 +26,104 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
 
-      - name: Install build deps
+      - name: Install build dependencies
         run: |
-          sudo apt-get update
+          sudo apt-get update -y
           sudo apt-get install -y autoconf automake libtool pkg-config build-essential
 
       - name: Build extension
         run: |
           phpize
-          ./configure --enable-battery_info
+          ./configure --enable-${EXT_NAME}
           make -j$(nproc)
 
       - name: Test extension
         run: |
-          php -d extension=modules/battery_info.so -m | grep battery_info
-          php -d extension=modules/battery_info.so example.php
+          php -d extension=modules/${EXT_NAME}.so -m | grep ${EXT_NAME}
+          php -d extension=modules/${EXT_NAME}.so example.php
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: battery_info-x86_64-linux-php${{ matrix.php }}
-          path: ./modules
+          name: ${EXT_NAME}-x86_64-linux-php${{ matrix.php }}
+          path: modules/
+  
 
-  build-multiarch:
-    name: Build (Linux ${{ matrix.arch }})
-    runs-on: ${{ matrix.arch == 'aarch64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
-    continue-on-error: ${{ matrix.arch == 'armv7' }}
+  build-linux:
+    name: Build (Linux ${{ matrix.label }}, PHP ${{ matrix.php }})
+    runs-on: ${{ matrix.runner }}
+    continue-on-error: ${{ matrix.qemu }}
     strategy:
       fail-fast: false
       matrix:
+        php: ['8.1', '8.2', '8.3', '8.4']
         include:
-          - arch: aarch64
-            php: '8.1'
-          - arch: aarch64
-            php: '8.2'
-          - arch: aarch64
-            php: '8.3'
-          - arch: aarch64
-            php: '8.4'
-          - arch: armv7
+          - label: aarch64
+            arch: aarch64
+            runner: ubuntu-24.04-arm
+            qemu: false
+
+          - label: armhf
+            arch: armv7
+            runner: ubuntu-latest
             distro: ubuntu22.04
-            php: '8.1'
-          - arch: armv7
-            distro: ubuntu22.04
-            php: '8.2'
-          - arch: armv7
-            distro: ubuntu22.04
-            php: '8.3'
-          - arch: armv7
-            distro: ubuntu22.04
-            php: '8.4'
+            qemu: true
 
     steps:
       - uses: actions/checkout@v4
 
-      # Native ARM64 build (no QEMU)
-      - name: Build natively on ARM64
-        if: matrix.arch == 'aarch64'
+      # Native ARM64
+      - name: Build natively (ARM64)
+        if: matrix.qemu == false
         run: |
           sudo add-apt-repository -y ppa:ondrej/php
-          sudo apt-get update -q -y
-          sudo apt-get install -q -y php${{ matrix.php }} php${{ matrix.php }}-dev php${{ matrix.php }}-cli \
+          sudo apt-get update -y
+          sudo apt-get install -y \
+            php${{ matrix.php }} \
+            php${{ matrix.php }}-dev \
+            php${{ matrix.php }}-cli \
             autoconf automake libtool pkg-config build-essential
-          
-          phpize
-          ./configure --enable-battery_info
-          make -j$(nproc)
-          
-          # Test
-          php -d extension=modules/battery_info.so -m | grep battery_info || true
-          php -d extension=modules/battery_info.so example.php || true
 
-      # QEMU-based build for armv7
-      - name: Build on ${{ matrix.arch }} with QEMU
-        if: matrix.arch != 'aarch64'
+          phpize
+          ./configure --enable-${EXT_NAME}
+          make -j$(nproc)
+
+          php -d extension=modules/${EXT_NAME}.so -m | grep ${EXT_NAME} || true
+          php -d extension=modules/${EXT_NAME}.so example.php || true
+
+      # QEMU (armhf)
+      - name: Build with QEMU (ARMv7 / armhf)
+        if: matrix.qemu == true
         uses: uraimo/run-on-arch-action@v2
         with:
           arch: ${{ matrix.arch }}
           distro: ${{ matrix.distro }}
           githubToken: ${{ github.token }}
-          
+
           install: |
-            apt-get update -q -y
-            apt-get install -q -y software-properties-common
+            apt-get update -y
+            apt-get install -y software-properties-common
             add-apt-repository -y ppa:ondrej/php
-            apt-get update -q -y
-            apt-get install -q -y php${{ matrix.php }} php${{ matrix.php }}-dev php${{ matrix.php }}-cli \
+            apt-get update -y
+            apt-get install -y \
+              php${{ matrix.php }} \
+              php${{ matrix.php }}-dev \
+              php${{ matrix.php }}-cli \
               autoconf automake libtool pkg-config build-essential file
-          
+
           run: |
             phpize
-            ./configure --enable-battery_info
+            ./configure --enable-${EXT_NAME}
             make -j$(nproc)
-            
-            # Test
-            php -d extension=modules/battery_info.so -m | grep battery_info || true
-            php -d extension=modules/battery_info.so example.php || true
-            
-            # Create artifact directory
+
+            php -d extension=modules/${EXT_NAME}.so -m | grep ${EXT_NAME} || true
+            php -d extension=modules/${EXT_NAME}.so example.php || true
+
             mkdir -p artifacts
             cp -r modules artifacts/
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: battery_info-${{ matrix.arch }}-linux-php${{ matrix.php }}
-          path: ${{ matrix.arch == 'aarch64' && 'modules' || 'artifacts/modules' }}
+          name: ${EXT_NAME}-${{ matrix.label }}-linux-php${{ matrix.php }}
+          path: ${{ matrix.qemu && 'artifacts/modules' || 'modules' }}
