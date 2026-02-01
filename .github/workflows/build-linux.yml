@@ -98,6 +98,8 @@ jobs:
           arch: ${{ matrix.arch }}
           distro: ${{ matrix.distro }}
           githubToken: ${{ github.token }}
+          env: |
+            EXT_NAME=${{ env.EXT_NAME }}
           install: |
             apt-get update -y
             apt-get install -y software-properties-common
@@ -118,9 +120,6 @@ jobs:
 
             mkdir -p artifacts
             cp -r modules artifacts/
-
-        env:
-          EXT_NAME: ${{ env.EXT_NAME }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
