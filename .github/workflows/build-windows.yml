@@ -38,11 +38,17 @@ jobs:
           $phpVersion = php -r "echo PHP_VERSION;"
           Write-Host "PHP Version: $phpVersion"
           
-          # Try NTS first, then TS if NTS fails
+          # Extract major.minor version (e.g., 8.3 from 8.3.30)
+          $majorMinor = $phpVersion -replace '^(\d+\.\d+).*', '$1'
+          
+          # Try multiple URL patterns
           $urls = @(
             "https://windows.php.net/downloads/releases/php-devel-pack-$phpVersion-nts-Win32-vs16-x64.zip",
+            "https://windows.php.net/downloads/releases/php-devel-pack-$phpVersion-nts-Win32-VS16-x64.zip",
             "https://windows.php.net/downloads/releases/php-devel-pack-$phpVersion-Win32-vs16-x64.zip",
-            "https://windows.php.net/downloads/releases/php-devel-pack-$phpVersion-nts-Win32-VS16-x64.zip"
+            "https://windows.php.net/downloads/releases/php-devel-pack-$phpVersion-nts-windows-vs16-x64.zip",
+            "https://windows.php.net/downloads/qa/php-devel-pack-$phpVersion-nts-Win32-vs16-x64.zip",
+            "https://downloads.php.net/~eric/php-devel-pack-$phpVersion-nts-Win32-vs16-x64.zip"
           )
           
           $downloaded = $false
@@ -54,7 +60,7 @@ jobs:
               Write-Host "Successfully downloaded from: $url"
               break
             } catch {
-              Write-Host "Failed: $_"
+              Write-Host "Failed, trying next URL..."
             }
           }
           
