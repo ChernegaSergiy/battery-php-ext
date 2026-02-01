@@ -100,6 +100,9 @@ jobs:
           distro: ${{ matrix.distro }}
           githubToken: ${{ github.token }}
 
+          env: |
+            EXT_NAME: battery_info
+
           install: |
             apt-get update -y
             apt-get install -y software-properties-common
