@@ -8,6 +8,10 @@
 #ifndef BATTERY_COMMON_H
 #define BATTERY_COMMON_H
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <php.h>
 
 /* Extension version */
