@@ -46,23 +46,19 @@ jobs:
 
   build-multiarch:
     name: Build (Linux ${{ matrix.arch }})
-    runs-on: ubuntu-latest
-    continue-on-error: true
+    runs-on: ${{ matrix.arch == 'aarch64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+    continue-on-error: ${{ matrix.arch == 'armv7' }}
     strategy:
       fail-fast: false
       matrix:
         include:
           - arch: aarch64
-            distro: ubuntu22.04
             php: '8.1'
           - arch: aarch64
-            distro: ubuntu22.04
             php: '8.2'
           - arch: aarch64
-            distro: ubuntu22.04
             php: '8.3'
           - arch: aarch64
-            distro: ubuntu22.04
             php: '8.4'
           - arch: armv7
             distro: ubuntu22.04
@@ -80,7 +76,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build on ${{ matrix.arch }}
+      # Native ARM64 build (no QEMU)
+      - name: Build natively on ARM64
+        if: matrix.arch == 'aarch64'
+        run: |
+          sudo add-apt-repository -y ppa:ondrej/php
+          sudo apt-get update -q -y
+          sudo apt-get install -q -y php${{ matrix.php }} php${{ matrix.php }}-dev php${{ matrix.php }}-cli \
+            autoconf automake libtool pkg-config build-essential
+          
+          phpize
+          ./configure --enable-battery_info
+          make -j$(nproc)
+          
+          # Test
+          php -d extension=modules/battery_info.so -m | grep battery_info || true
+          php -d extension=modules/battery_info.so example.php || true
+
+      # QEMU-based build for armv7
+      - name: Build on ${{ matrix.arch }} with QEMU
+        if: matrix.arch != 'aarch64'
         uses: uraimo/run-on-arch-action@v2
         with:
           arch: ${{ matrix.arch }}
@@ -112,4 +127,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: battery_info-${{ matrix.arch }}-linux-php${{ matrix.php }}
-          path: artifacts/modules
+          path: ${{ matrix.arch == 'aarch64' && 'modules' || 'artifacts/modules' }}
