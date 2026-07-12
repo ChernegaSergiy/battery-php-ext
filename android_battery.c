@@ -1,80 +1,55 @@
 /**
  * android_battery.c - Android battery information implementation
  *
- * Uses JNI to call Java Battery helper class
+ * Connects to the BatteryBridge Android app via TCP socket
  */
 
 #include "include/battery_common.h"
 
 #if defined(__ANDROID__)
 
-#include <jni.h>
 #include <stdio.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <unistd.h>
 
-static JavaVM *g_jvm = NULL;
+#define BRIDGE_PORT 8765
 
-/**
- * JNI_OnLoad - Store JVM reference when library is loaded
- */
-JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved)
+static int read_battery_data(int *level, int *charging, int *health, int *temp, int *voltage, char *tech, size_t tech_size)
 {
-    g_jvm = vm;
-    return JNI_VERSION_1_6;
-}
-
-/**
- * Get JNI environment for current thread
- */
-static JNIEnv *get_jni_env(void)
-{
-    if (!g_jvm) {
-        return NULL;
-    }
-
-    JNIEnv *env = NULL;
-    if ((*g_jvm)->GetEnv(g_jvm, (void **)&env, JNI_VERSION_1_6) != JNI_OK) {
-        if ((*g_jvm)->AttachCurrentThread(g_jvm, &env, NULL) != 0) {
-            return NULL;
-        }
-    }
-
-    return env;
-}
-
-/**
- * Get battery level via JNI
- */
-static int get_level_jni(JNIEnv *env)
-{
-    jclass cls = (*env)->FindClass(env, "com/example/Battery");
-    if (!cls) {
+    int sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock < 0) {
         return -1;
     }
 
-    jmethodID mid = (*env)->GetStaticMethodID(env, cls, "getLevel", "()I");
-    if (!mid) {
+    struct sockaddr_in serv_addr;
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(BRIDGE_PORT);
+    inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr);
+
+    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
+        close(sock);
         return -1;
     }
 
-    return (int)(*env)->CallStaticIntMethod(env, cls, mid);
-}
+    char buffer[512] = {0};
+    int bytes_read = read(sock, buffer, sizeof(buffer) - 1);
+    close(sock);
 
-/**
- * Get charging status via JNI
- */
-static int get_charging_jni(JNIEnv *env)
-{
-    jclass cls = (*env)->FindClass(env, "com/example/Battery");
-    if (!cls) {
+    if (bytes_read <= 0) {
         return -1;
     }
 
-    jmethodID mid = (*env)->GetStaticMethodID(env, cls, "isCharging", "()Z");
-    if (!mid) {
-        return -1;
+    // Parse JSON string: {"l":85,"c":1,"h":2,"t":35,"v":4120,"tech":"Li-ion"}
+    int parsed = sscanf(buffer, "{\"l\":%d,\"c\":%d,\"h\":%d,\"t\":%d,\"v\":%d,\"tech\":\"%63[^\"]\"}", 
+                        level, charging, health, temp, voltage, tech);
+
+    if (parsed >= 2) {
+        return 0; // Successfully parsed at least level and charging
     }
 
-    return (*env)->CallStaticBooleanMethod(env, cls, mid) ? 1 : 0;
+    return -1;
 }
 
 void android_battery_get_details(zval *return_value)
@@ -82,11 +57,10 @@ void android_battery_get_details(zval *return_value)
     zval batteries;
     array_init(&batteries);
 
-    JNIEnv *env = get_jni_env();
-    if (env) {
-        int level = get_level_jni(env);
-        int charging = get_charging_jni(env);
+    int level = -1, charging = -1, health = -1, temp = -1, voltage = -1;
+    char tech[64] = {0};
 
+    if (read_battery_data(&level, &charging, &health, &temp, &voltage, tech, sizeof(tech)) == 0) {
         zval bat;
         array_init(&bat);
 
@@ -115,35 +89,32 @@ void android_battery_get_details(zval *return_value)
         add_assoc_zval(return_value, BATTERY_KEY_BATTERIES, &batteries);
 
         /* Add aggregated values */
-        if (level >= 0 && charging >= 0) {
-            BATTERY_ADD_INFO(return_value, level, charging);
-        } else if (level >= 0) {
-            add_assoc_long(return_value, BATTERY_KEY_LEVEL, level);
-            add_assoc_null(return_value, BATTERY_KEY_CHARGING);
-            add_assoc_null(return_value, BATTERY_KEY_STATUS);
-        } else {
-            BATTERY_ADD_NULL_INFO(return_value);
-        }
+        BATTERY_ADD_INFO(return_value, level, charging);
     } else {
-        /* No JNI environment available */
+        /* Failed to connect or read from bridge */
         add_assoc_zval(return_value, BATTERY_KEY_BATTERIES, &batteries);
         BATTERY_ADD_NULL_INFO(return_value);
     }
 }
 
-/**
- * Public API for native-lib.c in APK
- */
 int android_battery_level(void)
 {
-    JNIEnv *env = get_jni_env();
-    return env ? get_level_jni(env) : -1;
+    int level = -1, charging = -1, health = -1, temp = -1, voltage = -1;
+    char tech[64] = {0};
+    if (read_battery_data(&level, &charging, &health, &temp, &voltage, tech, sizeof(tech)) == 0) {
+        return level;
+    }
+    return -1;
 }
 
 int android_battery_is_charging(void)
 {
-    JNIEnv *env = get_jni_env();
-    return env ? get_charging_jni(env) : -1;
+    int level = -1, charging = -1, health = -1, temp = -1, voltage = -1;
+    char tech[64] = {0};
+    if (read_battery_data(&level, &charging, &health, &temp, &voltage, tech, sizeof(tech)) == 0) {
+        return charging;
+    }
+    return -1;
 }
 
 #else
