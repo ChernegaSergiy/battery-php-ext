@@ -79,7 +79,7 @@ if ($info['level'] !== null) {
 
 ## Notes
 
-- **Android** requires a small Java helper class and JNI glue — see `android_battery.c` comments.
+- **Android** requires the `android-battery-bridge` app running a TCP server on `127.0.0.1:8765` — see `android_battery.c` for details.
 - On **Linux** the extension reads `/sys/class/power_supply/*/capacity` and `status`.
 - On **macOS** the extension uses IOKit (build with Xcode tools available).
 - On **Windows** the extension uses `GetSystemPowerStatus`.
