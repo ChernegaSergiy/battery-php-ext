@@ -93,7 +93,7 @@ jobs:
 
       - name: Build with QEMU (ARMv7 / armhf)
         if: matrix.qemu == true
-        uses: uraimo/run-on-arch-action@v2
+        uses: uraimo/run-on-arch-action@v3
         with:
           arch: ${{ matrix.arch }}
           distro: ${{ matrix.distro }}
